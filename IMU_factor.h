@@ -1,7 +1,6 @@
 #include <Eigen/Eigen>
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_binary_edge.h>
-#include <g2o/core/base_multi_edge.h>
 #include "math_preintegration.h"
 
 class VertexIMU : public g2o::BaseVertex <15, Vector15d>{
@@ -29,7 +28,7 @@ public:
 };
 
 
-class EdgeT : public g2o::BaseBinaryEdge <6, g2o::SE3Quat, VertexIMU, VertexIMU>{
+class EdgeT : public g2o::BaseBinaryEdge <6, Vector6d, VertexIMU, VertexIMU>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -40,36 +39,38 @@ public:
     virtual void linearizeOplus() override {
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
-        g2o::SE3Quat Ti(exp(vi->estimate().head(3)),vi->estimate().segment(3,3));
 
-        g2o::SE3Quat Tj(exp(vj->estimate().head(3)),vj->estimate().segment(3,3));
+        Matrix3d R_i = exp(vi->estimate().head(3));
+        Matrix3d R_j = exp(vj->estimate().head(3));
+        Matrix3d Rji = exp(_measurement.head(3));
+        
+        Vector3d P_i = vi->estimate().segment(3,3);
+        Vector3d P_j = vj->estimate().segment(3,3);
+        Vector3d Pji = _measurement.tail(3);
 
-        const g2o::SE3Quat& Tji = _measurement;
-        g2o::SE3Quat e = Tj.inverse()*Tji*Ti;
 
-        _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(e.rotation().matrix()));
-        _jacobianOplusXi.block(3,3,3,3) = Tj.rotation().matrix().transpose()*Tji.rotation().matrix();
+        _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
+        _jacobianOplusXi.block(3,3,3,3) = R_j.transpose()*Rji;
 
-        _jacobianOplusXj.block(0,0,3,3) = -jacobian_right_inv(Log(e.rotation().matrix()));
-        _jacobianOplusXj.block(3,0,3,3) = hat(e.translation());
-        _jacobianOplusXj.block(3,3,3,3) = -Tj.rotation().matrix().transpose();
+        _jacobianOplusXj.block(0,0,3,3) = -jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
+        _jacobianOplusXj.block(3,0,3,3) = hat(R_j.transpose()*(Rji*P_i+Pji-P_j));
+        _jacobianOplusXj.block(3,3,3,3) = -R_j.transpose();
     }
 
     virtual void computeError() override {
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
 
-        g2o::SE3Quat Ti(exp(vi->estimate().head(3)),vi->estimate().segment(3,3));
+        Matrix3d R_i = exp(vi->estimate().head(3));
+        Matrix3d R_j = exp(vj->estimate().head(3));
+        Matrix3d Rji = exp(_measurement.head(3));
+
+        Vector3d P_i = vi->estimate().segment(3,3);
+        Vector3d P_j = vj->estimate().segment(3,3);
+        Vector3d Pji = _measurement.tail(3);
         
-        g2o::SE3Quat Tj(exp(vj->estimate().head(3)),vj->estimate().segment(3,3));
-
-        g2o::SE3Quat Tji(_measurement);
-
-
-        g2o::SE3Quat error = Tj.inverse()*Tji*Ti;
-        
-        _error.head(3) =  Log(error.rotation().matrix());
-        _error.segment(3,3) = error.translation();
+        _error.head(3) = Log(R_j.transpose()*Rji*R_i);
+        _error.tail(3) = R_j.transpose()*Rji*P_i+R_j.transpose()*Pji-R_j.transpose()*P_j;
     }
 };
 
@@ -150,6 +151,8 @@ public:
         _jacobianOplusXj.block(6,9,3,3) = -pd_p_ba;
         //delta_p to delta_bgi
         _jacobianOplusXj.block(6,12,3,3) = -pd_p_bg;
+
+        //std::cout<<"jac1:"<<_jacobianOplusXj<<std::endl;
 
     }
     virtual void computeError() override {

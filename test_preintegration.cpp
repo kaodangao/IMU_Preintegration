@@ -6,9 +6,6 @@
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
-#include <g2o/core/base_vertex.h>
-#include <g2o/core/base_binary_edge.h>
-#include <g2o/core/base_multi_edge.h>
 #include <g2o/types/slam3d/se3quat.h>
 
 #include "math_preintegration.h"
@@ -36,17 +33,14 @@ vector< vector<double> > read_data(string path){
             ss >> data;
             if(count == 0){
                 IMUDATA_LINE.push_back(data);
-
             }
             else if(count>7){
                 IMUDATA_LINE.push_back(data);
             }
             count ++;
-
         }
         IMUDATA.push_back(IMUDATA_LINE);
         IMUDATA_LINE.clear();
-
     }
     return IMUDATA;
 }
@@ -58,9 +52,9 @@ int main(int argc, char *argv[]){
     vector< vector<double> > imudata;
     imudata = read_data(argv[1]);
     for(int i = 0; i < imudata.size()-1; i++){
-        Eigen::Vector3d gyro;
+        Vector3d gyro;
         gyro << imudata[i][1], imudata[i][2], imudata[i][3];
-        Eigen::Vector3d acc;
+        Vector3d acc;
         acc << imudata[i][4], imudata[i][5], imudata[i][6];
 
         IMUP.Calculate(acc, gyro, imudata[i+1][0]-imudata[i][0]);
@@ -92,10 +86,11 @@ int main(int argc, char *argv[]){
 
     Eigen::Quaterniond q2(0.998598 ,0.0495645 ,0.0107507 ,0.0151907);
     Eigen::Vector3d p2(19.9926, 5.62822, 5.30902);
-
+    Eigen::Vector3d g(0,0,-9.8);
     g2o::SE3Quat t2_(q2,p2);
-    std::cout<<"t2_"<<std::endl<<t2_<<std::endl;
-    Eigen::Vector3d vel1(-0, 6.28319 ,3.14159);
+    std::cout<<"t2"<<std::endl<<t2_<<std::endl;
+    //Eigen::Vector3d vel1(-0, 6.28319 ,3.14159);
+    Eigen::Vector3d vel1(0,6.28319 ,3.14159);
     VertexIMU* v0 = new VertexIMU();
     Vector15d state_i = Vector15d::Zero();
 
@@ -108,7 +103,8 @@ int main(int argc, char *argv[]){
     VertexIMU* v1 = new VertexIMU();
     Vector15d state_j = Vector15d::Zero();
     Eigen::Vector3d k(0.1,0.1,0.1);
-    state_j<<Log(q2.matrix())+k/10,p2+k,vel1+IMUP.delta_v_read(),Vector6d::Zero();
+    state_j<<Log(q1.matrix()*IMUP.delta_r_read()),p1+vel1*0.1+0.5*g*0.1*0.1+q1.matrix()*IMUP.delta_p_read(),vel1+g*0.1+q1.matrix()*IMUP.delta_v_read(),Vector6d::Zero();
+    std::cout<<"state_j:"<<state_j<<std::endl;
     v1->setEstimate(state_j);
     v1->setId(1);
     v1->setFixed(false);
@@ -131,16 +127,17 @@ int main(int argc, char *argv[]){
     EdgeT* et = new EdgeT();
     g2o::SE3Quat t21 = t2_ * t1_.inverse();
 
-
+    Vector6d t21_meas;
+    t21_meas<<Log(t21.rotation().matrix()),t21.translation();
     et->setVertex(0,dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(0)));
     et->setVertex(1,dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(1)));
-    et->setMeasurement(t21);
+    et->setMeasurement(t21_meas);
     et->setInformation(Matrix6d::Identity());
     optimizer.addEdge(et);
     std::cout<<"nb"<<std::endl;
     optimizer.initializeOptimization();
 
-    optimizer.optimize(30);
+    optimizer.optimize(100);
 
     VertexIMU* v0_ = static_cast<VertexIMU*>(optimizer.vertex(0));
     VertexIMU* v1_ = static_cast<VertexIMU*>(optimizer.vertex(1));
