@@ -1,0 +1,3 @@
+/home/rixap/projects/preintegration/build/CMakeFiles/preintegration.dir
+/home/rixap/projects/preintegration/build/CMakeFiles/edit_cache.dir
+/home/rixap/projects/preintegration/build/CMakeFiles/rebuild_cache.dir
