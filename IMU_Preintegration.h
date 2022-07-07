@@ -1,4 +1,4 @@
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 
 #include "math_preintegration.h"
 
@@ -13,8 +13,8 @@ class IMU_Preintegration{
         delta_v = Vector3d::Zero();
         delta_r = Matrix3d::Identity();
 
-        ba = Vector3d::Zero(); 
-        bg = Vector3d::Zero();
+        ba = acc_bias; 
+        bg = gyro_bias;
 
         pd_r_bg = Matrix3d::Zero();
         pd_p_bg = Matrix3d::Zero();
@@ -36,7 +36,6 @@ class IMU_Preintegration{
         A.block(6,0,3,3) = -delta_r*hat(acc-ba)*delta_t;
         A.block(3,0,3,3) = -0.5*delta_r*hat(acc-ba)*delta_t*delta_t;
         A.block(3,6,3,3) = Matrix3d::Identity()*delta_t;
-
         Matrix93 B = Matrix93::Zero();
         B.block(3,0,3,3) = 0.5*delta_r*delta_t*delta_t;
         B.block(6,0,3,3) = delta_r*delta_t;
@@ -55,6 +54,28 @@ class IMU_Preintegration{
         delta_p += delta_v*delta_t + 0.5*delta_r*(acc-ba)*delta_t*delta_t;
         delta_v += delta_r*(acc-ba)*delta_t;
         delta_r = delta_r*dR;
+    }
+
+    void reset(Vector3d acc_bias, Vector3d gyro_bias, double acc_noise_sigma, double gyro_noise_sigma){
+        delta_tij = 0;
+        g << 0, 0, -9.8;
+
+        delta_p = Vector3d::Zero();
+        delta_v = Vector3d::Zero();
+        delta_r = Matrix3d::Identity();
+
+        ba = acc_bias; 
+        bg = gyro_bias;
+
+        pd_r_bg = Matrix3d::Zero();
+        pd_p_bg = Matrix3d::Zero();
+        pd_p_ba = Matrix3d::Zero();
+        pd_v_bg = Matrix3d::Zero();
+        pd_v_ba = Matrix3d::Zero();
+
+        cov_acc = acc_noise_sigma*acc_noise_sigma*Matrix3d::Identity();
+        cov_gyro = gyro_noise_sigma*gyro_noise_sigma*Matrix3d::Identity();
+        cov_residual = Matrix9d::Identity();
     }
 
     double delta_tij_read(){return delta_tij;}

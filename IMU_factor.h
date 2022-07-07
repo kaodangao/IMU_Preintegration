@@ -1,4 +1,4 @@
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_binary_edge.h>
 #include "math_preintegration.h"

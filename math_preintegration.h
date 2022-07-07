@@ -1,11 +1,12 @@
 #ifndef _MATH_PREINTEGRATION_H
 #define _MATH_PREINTEGRATION_H
 
-#include <Eigen/Eigen>
+#include <eigen3/Eigen/Eigen>
 
 typedef Eigen::Matrix<double, 15, 1> Vector15d;
 typedef Eigen::Matrix<double, 9, 1> Vector9d;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
+typedef Eigen::Matrix<double, 4, 1> Vector4d;
 typedef Eigen::Matrix<double, 3, 1> Vector3d;
 typedef Eigen::Matrix<double, 3, 3> Matrix3d;
 typedef Eigen::Matrix<double, 6, 6> Matrix6d;
@@ -31,7 +32,7 @@ Matrix3d jacobian_right( Vector3d phi){
     Matrix3d phi_hat = hat(phi);
     
     if(phi_abs < 0.00001){
-        Jr = Matrix3d::Identity()-0.5*phi_hat;
+        Jr = Matrix3d::Identity()-0.5*phi_hat+phi_hat*phi_hat/6;
     }
     else{
         Jr = Matrix3d::Identity()-(1-cos(phi_abs))/(phi_abs*phi_abs)*phi_hat+(phi_abs-sin(phi_abs))/(phi_abs*phi_abs*phi_abs)*phi_hat*phi_hat;
@@ -59,7 +60,7 @@ Matrix3d exp( Vector3d phi){
     Matrix3d phi_hat = hat(phi);
 
     if(phi_abs < 0.00001){
-        R = Matrix3d::Identity()+phi_hat;
+        R = Matrix3d::Identity()+phi_hat+0.5*phi_hat*phi_hat;
     }
     else{
         R = Matrix3d::Identity()+sin(phi_abs)/phi_abs*phi_hat+(1-cos(phi_abs))/(phi_abs*phi_abs)*phi_hat*phi_hat;
