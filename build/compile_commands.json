@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/rixap/projects/preintegration/build",
+  "command": "/usr/bin/g++ -DGFLAGS_IS_A_DLL=0 -DGLOG_CUSTOM_PREFIX_SUPPORT -I/usr/include/eigen3 -std=c++14 -g -o CMakeFiles/preintegration.dir/test_preintegration.cpp.o -c /home/rixap/projects/preintegration/test_preintegration.cpp",
+  "file": "/home/rixap/projects/preintegration/test_preintegration.cpp"
+}
+]
