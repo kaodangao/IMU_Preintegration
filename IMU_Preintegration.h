@@ -7,7 +7,7 @@ class IMU_Preintegration{
 
     IMU_Preintegration(Vector3d acc_bias, Vector3d gyro_bias, double acc_noise_sigma, double gyro_noise_sigma){
         delta_tij = 0;
-        g << 0, 0, -9.8;
+        g << 0, 0, -9.81;
 
         delta_p = Vector3d::Zero();
         delta_v = Vector3d::Zero();
@@ -26,7 +26,12 @@ class IMU_Preintegration{
         cov_gyro = gyro_noise_sigma*gyro_noise_sigma*Matrix3d::Identity();
         cov_residual = Matrix9d::Identity();
     }
-
+   /**
+   * calculate preintegration
+   * @param acc acceleration from IMU data
+   * @param gyro_bias angular velocity from IMU data
+   * @param delta_t time interval between 2 IMU data
+   */
     void Calculate(Vector3d acc, Vector3d gyro, double delta_t){
         delta_tij += delta_t;
         Matrix3d dR = exp((gyro-bg)*delta_t);
@@ -36,6 +41,7 @@ class IMU_Preintegration{
         A.block(6,0,3,3) = -delta_r*hat(acc-ba)*delta_t;
         A.block(3,0,3,3) = -0.5*delta_r*hat(acc-ba)*delta_t*delta_t;
         A.block(3,6,3,3) = Matrix3d::Identity()*delta_t;
+
         Matrix93 B = Matrix93::Zero();
         B.block(3,0,3,3) = 0.5*delta_r*delta_t*delta_t;
         B.block(6,0,3,3) = delta_r*delta_t;
@@ -48,17 +54,20 @@ class IMU_Preintegration{
         pd_p_bg += pd_v_bg*delta_t - 0.5*delta_r*hat(acc-ba)*pd_r_bg*delta_t*delta_t;
         pd_v_ba -= delta_r*delta_t;
         pd_v_bg -= delta_r*hat(acc-ba)*pd_r_bg*delta_t;
-        pd_r_bg = dR.transpose()*pd_r_bg - jacobian_right((gyro-bg)*delta_t)*delta_t;
+        pd_r_bg = dR.transpose() * pd_r_bg- jacobian_right((gyro-bg)*delta_t)*delta_t;
 
-        
         delta_p += delta_v*delta_t + 0.5*delta_r*(acc-ba)*delta_t*delta_t;
         delta_v += delta_r*(acc-ba)*delta_t;
         delta_r = delta_r*dR;
     }
-
-    void reset(Vector3d acc_bias, Vector3d gyro_bias, double acc_noise_sigma, double gyro_noise_sigma){
+   /**
+   * Reset preintegration parameters
+   * @param acc_bias initial value of acceleration bias
+   * @param gyro_bias initial value of angular velocity bias
+   */
+    void reset(Vector3d acc_bias, Vector3d gyro_bias){
         delta_tij = 0;
-        g << 0, 0, -9.8;
+        g << 0, 0, -9.81;
 
         delta_p = Vector3d::Zero();
         delta_v = Vector3d::Zero();
@@ -73,8 +82,6 @@ class IMU_Preintegration{
         pd_v_bg = Matrix3d::Zero();
         pd_v_ba = Matrix3d::Zero();
 
-        cov_acc = acc_noise_sigma*acc_noise_sigma*Matrix3d::Identity();
-        cov_gyro = gyro_noise_sigma*gyro_noise_sigma*Matrix3d::Identity();
         cov_residual = Matrix9d::Identity();
     }
 

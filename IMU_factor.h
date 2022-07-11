@@ -48,13 +48,31 @@ public:
         Vector3d P_j = vj->estimate().segment(3,3);
         Vector3d Pji = _measurement.tail(3);
 
+        g2o::MatrixX j0;
+        j0.resize(6,15);
+        j0.setZero();
+        _jacobianOplusXi = j0;
 
+        g2o::MatrixX j1;
+        j1.resize(6,15);
+        j1.setZero();
+        _jacobianOplusXj = j1;
+
+        // _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
+        // _jacobianOplusXi.block(3,3,3,3) = R_j.transpose()*Rji;
+
+        // _jacobianOplusXj.block(0,0,3,3) = -jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
+        // _jacobianOplusXj.block(3,0,3,3) = hat(R_j.transpose()*(Rji*P_i+Pji-P_j));
+        // _jacobianOplusXj.block(3,3,3,3) = -R_j.transpose();
         _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
-        _jacobianOplusXi.block(3,3,3,3) = R_j.transpose()*Rji;
+
+        _jacobianOplusXi.block(3,3,3,3) = Rji*R_i;
 
         _jacobianOplusXj.block(0,0,3,3) = -jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
-        _jacobianOplusXj.block(3,0,3,3) = hat(R_j.transpose()*(Rji*P_i+Pji-P_j));
-        _jacobianOplusXj.block(3,3,3,3) = -R_j.transpose();
+
+        _jacobianOplusXj.block(3,3,3,3) = -R_j;
+        // std::cout<<"et/j0"<<_jacobianOplusXi<<std::endl;
+        // std::cout<<"et/j1"<<_jacobianOplusXj<<std::endl;
     }
 
     virtual void computeError() override {
@@ -68,9 +86,25 @@ public:
         Vector3d P_i = vi->estimate().segment(3,3);
         Vector3d P_j = vj->estimate().segment(3,3);
         Vector3d Pji = _measurement.tail(3);
-        
+
+        // std::cout<<"ri:"<<vi->estimate().head(3)<<std::endl;
+        // std::cout<<"rj:"<<vj->estimate().head(3)<<std::endl;
+        // _error.head(3) = Log(R_j.transpose()*Rji*R_i);
+        // _error.tail(3) = R_j.transpose()*Rji*P_i+R_j.transpose()*Pji-R_j.transpose()*P_j;
+
         _error.head(3) = Log(R_j.transpose()*Rji*R_i);
-        _error.tail(3) = R_j.transpose()*Rji*P_i+R_j.transpose()*Pji-R_j.transpose()*P_j;
+        _error.tail(3) = Pji - P_j + Rji*P_i;
+
+
+        // if(_error.head(3).norm() < 0.0001){
+        //     _error.head(3) << 0,0,0;
+        // }
+
+        // if(_error.tail(3).norm() < 0.0001){
+        //     _error.tail(3) << 0,0,0;
+        // }
+
+        //std::cout<<"errorT:"<<_error<<std::endl;
     }
 };
 
@@ -122,6 +156,16 @@ public:
         Vector3d residual_delta_rij = Log(delta_r_meas.transpose()*R_i.transpose()*R_j);
         Matrix3d jac_rij_inv = jacobian_right_inv(residual_delta_rij);
 
+        g2o::MatrixX j0;
+        j0.resize(9,15);
+        j0.setZero();
+        _jacobianOplusXi = j0;
+
+        g2o::MatrixX j1;
+        j1.resize(9,15);
+        j1.setZero();
+        _jacobianOplusXj = j1;
+
         //delta_r to ri 
         _jacobianOplusXi.block(0,0,3,3) = -jac_rij_inv*R_j.transpose()*R_i;
         //delta_v to ri
@@ -152,8 +196,8 @@ public:
         //delta_p to delta_bgi
         _jacobianOplusXj.block(6,12,3,3) = -pd_p_bg;
 
-        //std::cout<<"jac1:"<<_jacobianOplusXj<<std::endl;
-
+        // std::cout<<"jac0:"<<_jacobianOplusXi<<std::endl;
+        // std::cout<<"jac1:"<<_jacobianOplusXj<<std::endl;
     }
     virtual void computeError() override {
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
@@ -178,6 +222,20 @@ public:
         _error.segment(0,3) = Log(delta_r_meas.transpose()*R_i.transpose()*R_j);
         _error.segment(3,3) = R_i.transpose()*(V_j-V_i-g*delta_tij)-delta_v_meas;
         _error.segment(6,3) = R_i.transpose()*(P_j-P_i-V_i*delta_tij-0.5*g*delta_tij*delta_tij)-delta_p_meas;
+        
+        if(_error.head(3).norm() < 0.0001){
+            _error.head(3) << 0,0,0;
+        }
+
+        if(_error.segment(3,3).norm() < 0.0001){
+            _error.tail(3) << 0,0,0;
+        }
+
+        if(_error.tail(3).norm() < 0.0001){
+            _error.tail(3) << 0,0,0;
+        }
+
+        // std::cout<<"error_imu:"<<_error<<std::endl;
 
     }
 

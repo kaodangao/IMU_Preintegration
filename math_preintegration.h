@@ -31,7 +31,7 @@ Matrix3d jacobian_right( Vector3d phi){
     float phi_abs = phi.norm();
     Matrix3d phi_hat = hat(phi);
     
-    if(phi_abs < 0.00001){
+    if(phi_abs < 0.0001){
         Jr = Matrix3d::Identity()-0.5*phi_hat+phi_hat*phi_hat/6;
     }
     else{
@@ -45,7 +45,7 @@ Matrix3d jacobian_right_inv( Vector3d phi){
     float phi_abs = phi.norm();
     Matrix3d phi_hat = hat(phi);
 
-    if(phi_abs < 0.00001){
+    if(phi_abs < 0.0001){
         Jr_inv = Matrix3d::Identity()+0.5*phi_hat;
     }
     else{
@@ -59,7 +59,7 @@ Matrix3d exp( Vector3d phi){
     float phi_abs = phi.norm();
     Matrix3d phi_hat = hat(phi);
 
-    if(phi_abs < 0.00001){
+    if(phi_abs < 0.0001){
         R = Matrix3d::Identity()+phi_hat+0.5*phi_hat*phi_hat;
     }
     else{
@@ -70,11 +70,12 @@ Matrix3d exp( Vector3d phi){
 
 Vector3d Log( Matrix3d r){
     double d =  0.5*(r(0,0)+r(1,1)+r(2,2)-1);
+
     Vector3d omega;
     Vector3d dR;
     dR << r(2,1)-r(1,2),r(0,2)-r(2,0),r(1,0)-r(0,1);
 
-    if (d>0.99999){
+    if (d>0.99999 or d<-0.99999){
         omega=0.5*dR;
     }
     else{
