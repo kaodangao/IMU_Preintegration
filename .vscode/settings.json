@@ -68,6 +68,7 @@
         "codecvt": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "geometry": "cpp"
     }
 }

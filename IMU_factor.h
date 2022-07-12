@@ -19,8 +19,8 @@ public:
 
         Vector15d new_estimate;
 
-        new_estimate.segment(0,3) = Log(exp(estimate().head(3))*exp(update.head(3)));
-        new_estimate.segment(3,3) = exp(estimate().head(3))*update.segment(3,3)+_estimate.segment(3,3);
+        new_estimate.segment(0,3) = Log(Exp(estimate().head(3))*Exp(update.head(3)));
+        new_estimate.segment(3,3) = Exp(estimate().head(3))*update.segment(3,3)+_estimate.segment(3,3);
         new_estimate.tail(9) = estimate().tail(9)+ update.tail(9);
 
         setEstimate(new_estimate);
@@ -40,9 +40,9 @@ public:
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
 
-        Matrix3d R_i = exp(vi->estimate().head(3));
-        Matrix3d R_j = exp(vj->estimate().head(3));
-        Matrix3d Rji = exp(_measurement.head(3));
+        Matrix3d R_i = Exp(vi->estimate().head(3));
+        Matrix3d R_j = Exp(vj->estimate().head(3));
+        Matrix3d Rji = Exp(_measurement.head(3));
         
         Vector3d P_i = vi->estimate().segment(3,3);
         Vector3d P_j = vj->estimate().segment(3,3);
@@ -58,12 +58,6 @@ public:
         j1.setZero();
         _jacobianOplusXj = j1;
 
-        // _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
-        // _jacobianOplusXi.block(3,3,3,3) = R_j.transpose()*Rji;
-
-        // _jacobianOplusXj.block(0,0,3,3) = -jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
-        // _jacobianOplusXj.block(3,0,3,3) = hat(R_j.transpose()*(Rji*P_i+Pji-P_j));
-        // _jacobianOplusXj.block(3,3,3,3) = -R_j.transpose();
         _jacobianOplusXi.block(0,0,3,3) = jacobian_right_inv(Log(R_j.transpose()*Rji*R_i));
 
         _jacobianOplusXi.block(3,3,3,3) = Rji*R_i;
@@ -79,30 +73,16 @@ public:
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
 
-        Matrix3d R_i = exp(vi->estimate().head(3));
-        Matrix3d R_j = exp(vj->estimate().head(3));
-        Matrix3d Rji = exp(_measurement.head(3));
+        Matrix3d R_i = Exp(vi->estimate().head(3));
+        Matrix3d R_j = Exp(vj->estimate().head(3));
+        Matrix3d Rji = Exp(_measurement.head(3));
 
         Vector3d P_i = vi->estimate().segment(3,3);
         Vector3d P_j = vj->estimate().segment(3,3);
         Vector3d Pji = _measurement.tail(3);
 
-        // std::cout<<"ri:"<<vi->estimate().head(3)<<std::endl;
-        // std::cout<<"rj:"<<vj->estimate().head(3)<<std::endl;
-        // _error.head(3) = Log(R_j.transpose()*Rji*R_i);
-        // _error.tail(3) = R_j.transpose()*Rji*P_i+R_j.transpose()*Pji-R_j.transpose()*P_j;
-
         _error.head(3) = Log(R_j.transpose()*Rji*R_i);
         _error.tail(3) = Pji - P_j + Rji*P_i;
-
-
-        // if(_error.head(3).norm() < 0.0001){
-        //     _error.head(3) << 0,0,0;
-        // }
-
-        // if(_error.tail(3).norm() < 0.0001){
-        //     _error.tail(3) << 0,0,0;
-        // }
 
         //std::cout<<"errorT:"<<_error<<std::endl;
     }
@@ -140,8 +120,8 @@ public:
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
 
-        Matrix3d R_i = exp(vi->estimate().segment(0,3));
-        Matrix3d R_j = exp(vj->estimate().segment(0,3));
+        Matrix3d R_i = Exp(vi->estimate().segment(0,3));
+        Matrix3d R_j = Exp(vj->estimate().segment(0,3));
 
         Vector3d P_i = vi->estimate().segment(3,3);
         Vector3d P_j = vj->estimate().segment(3,3);
@@ -152,7 +132,7 @@ public:
         Vector3d delta_ba_i = vj->estimate().segment(9,3);
         Vector3d delta_bg_i = vj->estimate().segment(12,3);
 
-        Matrix3d delta_r_meas = delta_r*exp(pd_r_bg*delta_bg_i);
+        Matrix3d delta_r_meas = delta_r*Exp(pd_r_bg*delta_bg_i);
         Vector3d residual_delta_rij = Log(delta_r_meas.transpose()*R_i.transpose()*R_j);
         Matrix3d jac_rij_inv = jacobian_right_inv(residual_delta_rij);
 
@@ -186,7 +166,7 @@ public:
         //delta_p to pj
         _jacobianOplusXj.block(6,3,3,3) = R_i.transpose()*R_j; 
         //delta_r to delta_bgi
-        _jacobianOplusXj.block(0,12,3,3) = -jac_rij_inv*exp(-residual_delta_rij)*jacobian_right(pd_r_bg*delta_bg_i)*pd_r_bg;
+        _jacobianOplusXj.block(0,12,3,3) = -jac_rij_inv*Exp(-residual_delta_rij)*jacobian_right(pd_r_bg*delta_bg_i)*pd_r_bg;
         //delta_v to delta_bai
         _jacobianOplusXj.block(3,9,3,3) = -pd_v_ba;
         //delta_v to delta_bgi
@@ -203,8 +183,8 @@ public:
         const VertexIMU* vi = static_cast<const VertexIMU*>(_vertices[0]);
         const VertexIMU* vj = static_cast<const VertexIMU*>(_vertices[1]);
 
-        Matrix3d R_i = exp(vi->estimate().segment(0,3));
-        Matrix3d R_j = exp(vj->estimate().segment(0,3));
+        Matrix3d R_i = Exp(vi->estimate().segment(0,3));
+        Matrix3d R_j = Exp(vj->estimate().segment(0,3));
 
         Vector3d P_i = vi->estimate().segment(3,3);
         Vector3d P_j = vj->estimate().segment(3,3);
@@ -215,25 +195,13 @@ public:
         Vector3d delta_ba_i = vj->estimate().segment(9,3);
         Vector3d delta_bg_i = vj->estimate().segment(12,3);
 
-        Matrix3d delta_r_meas = delta_r*exp(pd_r_bg*delta_bg_i);
+        Matrix3d delta_r_meas = delta_r*Exp(pd_r_bg*delta_bg_i);
         Vector3d delta_v_meas = delta_v+pd_v_ba*delta_ba_i+pd_v_bg*delta_bg_i;
         Vector3d delta_p_meas = delta_p+pd_p_ba*delta_ba_i+pd_p_bg*delta_bg_i;
 
         _error.segment(0,3) = Log(delta_r_meas.transpose()*R_i.transpose()*R_j);
         _error.segment(3,3) = R_i.transpose()*(V_j-V_i-g*delta_tij)-delta_v_meas;
         _error.segment(6,3) = R_i.transpose()*(P_j-P_i-V_i*delta_tij-0.5*g*delta_tij*delta_tij)-delta_p_meas;
-        
-        if(_error.head(3).norm() < 0.0001){
-            _error.head(3) << 0,0,0;
-        }
-
-        if(_error.segment(3,3).norm() < 0.0001){
-            _error.tail(3) << 0,0,0;
-        }
-
-        if(_error.tail(3).norm() < 0.0001){
-            _error.tail(3) << 0,0,0;
-        }
 
         // std::cout<<"error_imu:"<<_error<<std::endl;
 

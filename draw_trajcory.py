@@ -34,10 +34,10 @@ position1 = data[:,[tx_index-1, tx_index, tx_index + 1]]
 position2 = []
 quaterntions2 = []
 timestamp2 = []
-data = np.loadtxt(filepath + '/imu_int_pose_noise.txt')
+data = np.loadtxt(filepath + '/dir_imu_pose.txt')
 # timestamp2 = data[:,0]
 # quaterntions2 = data[:,[tx_index + 6, tx_index + 3, tx_index + 4, tx_index + 5]] # qw,qx,qy,qz
-position2 = data[:,[tx_index, tx_index+1 , tx_index + 2]]
+position2 = data[:,[tx_index-1, tx_index , tx_index + 1]]
 
 position3 = []
 quaterntions3 = []
@@ -54,7 +54,7 @@ ax = fig.gca(projection='3d')
 
 ax.plot(position[:,0], position[:,1], position[:,2], label='gt')
 ax.plot(position1[:,0], position1[:,1], position1[:,2], label='vision')
-ax.plot(position2[:,0], position2[:,1], position2[:,2], label='imu_int')
+ax.plot(position2[:,0], position2[:,1], position2[:,2], label='dir_imu')
 ax.plot(position3[:,0], position3[:,1], position3[:,2], label='pre_imu')
 ax.plot([position[0,0]], [position[0,1]], [position[0,2]], 'r.', label='start')
 

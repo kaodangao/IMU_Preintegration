@@ -34,7 +34,7 @@ class IMU_Preintegration{
    */
     void Calculate(Vector3d acc, Vector3d gyro, double delta_t){
         delta_tij += delta_t;
-        Matrix3d dR = exp((gyro-bg)*delta_t);
+        Matrix3d dR = Exp((gyro-bg)*delta_t);
 
         Matrix9d A = Matrix9d::Identity();
         A.block(0,0,3,3) = dR.transpose();
@@ -48,7 +48,7 @@ class IMU_Preintegration{
 
         Matrix93 C = Matrix93::Zero();
         C.block(0,0,3,3) = jacobian_right((gyro-bg)*delta_t)*delta_t;
-        cov_residual = A*cov_residual*A.transpose() + B*cov_acc*B.transpose() + C*cov_gyro*C.transpose();
+        cov_residual = A*cov_residual*A.transpose() + B*cov_acc*B.transpose() + C*cov_gyro*C.transpose(); // covariance of residual errors
 
         pd_p_ba += pd_v_ba*delta_t - 0.5*delta_r*delta_t*delta_t;
         pd_p_bg += pd_v_bg*delta_t - 0.5*delta_r*hat(acc-ba)*pd_r_bg*delta_t*delta_t;
