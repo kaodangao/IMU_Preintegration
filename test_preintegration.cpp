@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 
         VertexIMU* v1 = new VertexIMU();
 
-        double error_coefficient = Vector3d::Random().normalized()(0)/100+1;
+        double error_coefficient = Vector3d::Random().normalized()(0)/500+1;
         Eigen::AngleAxisd r_error(0.01,Vector3d::Random().normalized());
 
         Vector15d state_j;
