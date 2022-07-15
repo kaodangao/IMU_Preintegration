@@ -31,18 +31,12 @@ Matrix3d jacobian_right( Vector3d phi){
     float phi_abs = phi.norm();
     Matrix3d phi_hat = hat(phi);
     
-    if(phi_abs < 0.001){
+    if(phi_abs < 0.0001){
         Jr = Matrix3d::Identity()-0.5*phi_hat+phi_hat*phi_hat/6;
     }
     else{
         Jr = Matrix3d::Identity()-(1-cos(phi_abs))/(phi_abs*phi_abs)*phi_hat+(phi_abs-sin(phi_abs))/(phi_abs*phi_abs*phi_abs)*phi_hat*phi_hat;
     }
-    // if(phi_abs < 0.001){
-    //     Jr = Matrix3d::Identity()-0.5*phi_abs*phi_hat;
-    // }
-    // else{
-    //     Jr = sin(phi_abs)/phi_abs*Matrix3d::Identity()+(1- sin(phi_abs)/phi_abs)*phi*phi.transpose()+((cos(phi_abs)-1)/phi_abs)*phi_hat;
-    // }
     return Jr;
 };
 
@@ -51,7 +45,7 @@ Matrix3d jacobian_right_inv( Vector3d phi){
     float phi_abs = phi.norm();
     Matrix3d phi_hat = hat(phi);
 
-    if(phi_abs < 0.001){
+    if(phi_abs < 0.0001){
         Jr_inv = Matrix3d::Identity()+0.5*phi_hat;
     }
     else{
@@ -61,41 +55,31 @@ Matrix3d jacobian_right_inv( Vector3d phi){
 };
 
 Matrix3d Exp( Vector3d phi){
-    Matrix3d R;
-    
-    float phi_abs = phi.norm();
-    if(phi_abs<0.001){
 
-        R = Matrix3d::Identity()+hat(phi);
+    float theta = phi.norm();
+    
+    if(theta == 0){
+        return Matrix3d::Identity();
     }
     else{
-        R = Matrix3d::Identity()+sin(phi_abs)/phi_abs*hat(phi)+(1-cos(phi_abs))/(phi_abs*phi_abs)*hat(phi)*hat(phi);
-
+        Vector3d v = sin(0.5*theta)/theta*phi;
+        Eigen::Quaterniond Q(cos(0.5*theta),v(0),v(1),v(2));
+        return Q.toRotationMatrix();
     }
-
-    return R;
 };
 
-Vector3d Log( Matrix3d r){
-    double d =  0.5*(r(0,0)+r(1,1)+r(2,2)-1);
+Vector3d Log( Matrix3d R ){
 
-    Vector3d omega;
-    Vector3d dR;
-    dR << r(2,1)-r(1,2),r(0,2)-r(2,0),r(1,0)-r(0,1);
+    Eigen::Quaterniond Q(R);
+    Vector3d v(Q.x(),Q.y(),Q.z());
+    double n = v.norm();
 
-    if (d>0.999 or d<-0.999){
-        omega=0.5*dR;
+    if(n==0 or Q.w()==0){
+        return Vector3d::Zero();
     }
     else{
-        double theta = acos(d);
-        omega = theta/(2*sqrt(1-d*d))*dR;
+        return 2*atan(n/Q.w())/n*v;       
     }
-    return omega;
-    // Eigen::AngleAxisd rotation_vector(r);
-    // Vector3d omega;
-    // omega = rotation_vector.angle()*rotation_vector.axis();
-    // return omega;
-
 
 }
 

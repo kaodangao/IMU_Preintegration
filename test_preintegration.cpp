@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 
         VertexIMU* v1 = new VertexIMU();
 
-        double error_coefficient = Vector3d::Random().normalized()(0)/500+1;
+        double error_coefficient = Vector3d::Random().normalized()(0)/100+1;
         Eigen::AngleAxisd r_error(0.01,Vector3d::Random().normalized());
 
         Vector15d state_j;
@@ -199,13 +199,13 @@ int main(int argc, char *argv[]){
         acc << imudata[i+1][11],imudata[i+1][12],imudata[i+1][13];
 
         Eigen::Quaterniond dq;
-
         dq = Exp(gyro*dt);
-        dq.normalize();
-    
+
         Pwb += Vw*dt+0.5*g*dt*dt+0.5*dt*dt*(Qwb*acc);
         Vw += Qwb*acc*dt+g*dt;
         Qwb = Qwb*dq;
+
+        std::cout<<(gyro*dt).norm()<<std::endl;
 
         save_points_dir
             <<Qwb.w()<<" "
@@ -238,13 +238,9 @@ int main(int argc, char *argv[]){
             ba = v_->estimate().segment(9,3);
             Vector3d v_p = v_->estimate().segment(6,3);
 
-            Eigen::Quaterniond dq;
-            dq = Exp((gyro-bg)*dt);
-            dq.normalize();
-
             Pwb += Vw*dt+0.5*g*dt*dt+Qwb*(acc-ba)*0.5*dt*dt;
             Vw += Qwb*(acc-ba)*dt+g*dt;
-            Qwb = Qwb*dq;
+            Qwb = Qwb*Exp((gyro-bg)*dt);
 
             save_points_pre
                 <<Qwb.w()<<" "
