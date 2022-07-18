@@ -191,7 +191,7 @@ int main(int argc, char *argv[]){
     Vector3d gyro(0,0,0);
     Vector3d ba;
     Vector3d bg;
-
+    double count = 0;
     for(int i = 0; i < imudata.size()-1; i++){
 
         double dt = imudata[i+1][0]-imudata[i][0];
@@ -203,9 +203,13 @@ int main(int argc, char *argv[]){
 
         Pwb += Vw*dt+0.5*g*dt*dt+0.5*dt*dt*(Qwb*acc);
         Vw += Qwb*acc*dt+g*dt;
-        Qwb = Qwb*dq;
+        Qwb = Qwb*dq.toRotationMatrix();
+    //     if((dq.toRotationMatrix()-Exp(gyro*dt)).norm()>0.0001){
+    //         count++;
+    //         std::cout<<dq.toRotationMatrix()-Exp(gyro*dt)<<std::endl;
 
-        std::cout<<(gyro*dt).norm()<<std::endl;
+    //     }
+    //    std::cout<<count<<std::endl;
 
         save_points_dir
             <<Qwb.w()<<" "

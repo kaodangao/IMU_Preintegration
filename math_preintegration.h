@@ -57,7 +57,6 @@ Matrix3d jacobian_right_inv( Vector3d phi){
 Matrix3d Exp( Vector3d phi){
 
     float theta = phi.norm();
-    
     if(theta == 0){
         return Matrix3d::Identity();
     }
