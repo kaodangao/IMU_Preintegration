@@ -117,6 +117,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named data_gen
+
+# Build rule for target.
+data_gen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 data_gen
+.PHONY : data_gen
+
+# fast build rule for target.
+data_gen/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/build
+.PHONY : data_gen/fast
+
+#=============================================================================
 # Target rules for targets named preintegration
 
 # Build rule for target.
@@ -128,6 +141,78 @@ preintegration: cmake_check_build_system
 preintegration/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/preintegration.dir/build.make CMakeFiles/preintegration.dir/build
 .PHONY : preintegration/fast
+
+data_gen/gener_alldata.o: data_gen/gener_alldata.cpp.o
+.PHONY : data_gen/gener_alldata.o
+
+# target to build an object file
+data_gen/gener_alldata.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/gener_alldata.cpp.o
+.PHONY : data_gen/gener_alldata.cpp.o
+
+data_gen/gener_alldata.i: data_gen/gener_alldata.cpp.i
+.PHONY : data_gen/gener_alldata.i
+
+# target to preprocess a source file
+data_gen/gener_alldata.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/gener_alldata.cpp.i
+.PHONY : data_gen/gener_alldata.cpp.i
+
+data_gen/gener_alldata.s: data_gen/gener_alldata.cpp.s
+.PHONY : data_gen/gener_alldata.s
+
+# target to generate assembly for a file
+data_gen/gener_alldata.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/gener_alldata.cpp.s
+.PHONY : data_gen/gener_alldata.cpp.s
+
+data_gen/src/imu.o: data_gen/src/imu.cpp.o
+.PHONY : data_gen/src/imu.o
+
+# target to build an object file
+data_gen/src/imu.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/imu.cpp.o
+.PHONY : data_gen/src/imu.cpp.o
+
+data_gen/src/imu.i: data_gen/src/imu.cpp.i
+.PHONY : data_gen/src/imu.i
+
+# target to preprocess a source file
+data_gen/src/imu.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/imu.cpp.i
+.PHONY : data_gen/src/imu.cpp.i
+
+data_gen/src/imu.s: data_gen/src/imu.cpp.s
+.PHONY : data_gen/src/imu.s
+
+# target to generate assembly for a file
+data_gen/src/imu.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/imu.cpp.s
+.PHONY : data_gen/src/imu.cpp.s
+
+data_gen/src/utilities.o: data_gen/src/utilities.cpp.o
+.PHONY : data_gen/src/utilities.o
+
+# target to build an object file
+data_gen/src/utilities.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/utilities.cpp.o
+.PHONY : data_gen/src/utilities.cpp.o
+
+data_gen/src/utilities.i: data_gen/src/utilities.cpp.i
+.PHONY : data_gen/src/utilities.i
+
+# target to preprocess a source file
+data_gen/src/utilities.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/utilities.cpp.i
+.PHONY : data_gen/src/utilities.cpp.i
+
+data_gen/src/utilities.s: data_gen/src/utilities.cpp.s
+.PHONY : data_gen/src/utilities.s
+
+# target to generate assembly for a file
+data_gen/src/utilities.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/data_gen/src/utilities.cpp.s
+.PHONY : data_gen/src/utilities.cpp.s
 
 test_preintegration.o: test_preintegration.cpp.o
 .PHONY : test_preintegration.o
@@ -161,7 +246,17 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... data_gen"
 	@echo "... preintegration"
+	@echo "... data_gen/gener_alldata.o"
+	@echo "... data_gen/gener_alldata.i"
+	@echo "... data_gen/gener_alldata.s"
+	@echo "... data_gen/src/imu.o"
+	@echo "... data_gen/src/imu.i"
+	@echo "... data_gen/src/imu.s"
+	@echo "... data_gen/src/utilities.o"
+	@echo "... data_gen/src/utilities.i"
+	@echo "... data_gen/src/utilities.s"
 	@echo "... test_preintegration.o"
 	@echo "... test_preintegration.i"
 	@echo "... test_preintegration.s"

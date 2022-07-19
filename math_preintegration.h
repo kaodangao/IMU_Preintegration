@@ -82,4 +82,5 @@ Vector3d Log( Matrix3d R ){
 
 }
 
+
 #endif

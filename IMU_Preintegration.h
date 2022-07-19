@@ -59,6 +59,7 @@ class IMU_Preintegration{
         delta_p += delta_v*delta_t + 0.5*delta_r*(acc-ba)*delta_t*delta_t;
         delta_v += delta_r*(acc-ba)*delta_t;
         delta_r = delta_r*dR;
+
     }
    /**
    * Reset preintegration parameters

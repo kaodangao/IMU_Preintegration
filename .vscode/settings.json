@@ -69,6 +69,8 @@
         "compare": "cpp",
         "concepts": "cpp",
         "numbers": "cpp",
-        "geometry": "cpp"
+        "geometry": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp"
     }
 }

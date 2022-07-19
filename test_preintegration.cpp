@@ -51,8 +51,8 @@ vector< vector<double> > read_data(string path){
 
 int main(int argc, char *argv[]){
 
-    Vector3d ba0(0,0,0);
-    Vector3d bg0(0,0,0);
+    Vector3d ba0(0.03,0.03,0.03);
+    Vector3d bg0(0.3,0.3,0.3);
     IMU_Preintegration IMUP(ba0,bg0,0.019,0.015); //0.019 is noise parameter of angular velocity 0.015 is noise parameter of acceleration 
     
     vector< vector<double> > imudata;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
         imudata = read_data(argv[1]);
     }
     else{
-        imudata = read_data("../imu_pose_noise.txt");
+        imudata = read_data("../data_gen/imu_pose_noise.txt");
     }
 
     g2o::OptimizationAlgorithmLevenberg* solver =
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
     Vector3d vj;
 
     std::ofstream save_vision_points;
-    save_vision_points.open("../vision_pose.txt");
+    save_vision_points.open("../data_gen/vision_pose.txt");
 
     for(int j = 0; j < FRAME_NUM; j++){
 
@@ -120,12 +120,12 @@ int main(int argc, char *argv[]){
 
         VertexIMU* v1 = new VertexIMU();
 
-        double error_coefficient = Vector3d::Random().normalized()(0)/100+1;
-        Eigen::AngleAxisd r_error(0.01,Vector3d::Random().normalized());
+        double error_coefficient = Vector3d::Random().normalized()(0)/500+1;
+        Eigen::AngleAxisd r_error(0.005,Vector3d::Random().normalized());
 
         Vector15d state_j;
-        //state_j << Log(r_error.toRotationMatrix()*qj.toRotationMatrix()), tj*error_coefficient, vj, Vector6d::Zero();
-        state_j << Log(r_error.toRotationMatrix()*qj.toRotationMatrix()), tj*error_coefficient, Vector9d::Zero();
+        state_j << Log(r_error.toRotationMatrix()*qj.toRotationMatrix()), tj*error_coefficient, vj, Vector6d::Zero();
+        //state_j << Log(r_error.toRotationMatrix()*qj.toRotationMatrix()), tj*error_coefficient, Vector9d::Zero();
 
         Eigen::Quaterniond qv(Exp(state_j.head(3)));
         qj = qv;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
         et->setVertex(0,dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(j)));
         et->setVertex(1,dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(j+1)));
         et->setMeasurement(tji_meas);
-        et->setInformation(Matrix6d::Identity()*1000);
+        et->setInformation(Matrix6d::Identity()*100);
         optimizer.addEdge(et);
 
         IMUP.reset(ba0,bg0);
@@ -178,12 +178,6 @@ int main(int argc, char *argv[]){
 
     VertexIMU* v_;
 
-    std::ofstream save_points_pre;
-    save_points_pre.open("../pre_imu_pose.txt");
-
-    std::ofstream save_points_dir;
-    save_points_dir.open("../dir_imu_pose.txt");
-
     Eigen::Quaterniond Qwb(imudata[0][1], imudata[0][2], imudata[0][3], imudata[0][4]);
     Vector3d Pwb(imudata[0][5], imudata[0][6], imudata[0][7]);
     Vector3d Vw(imudata[0][14],imudata[0][15],imudata[0][16]);
@@ -191,27 +185,33 @@ int main(int argc, char *argv[]){
     Vector3d gyro(0,0,0);
     Vector3d ba;
     Vector3d bg;
-    double count = 0;
-    for(int i = 0; i < imudata.size()-1; i++){
+
+    std::ofstream save_points_integration;
+    save_points_integration.open("../data_gen/integration_pose.txt");    
+
+    std::ofstream save_error_integration;
+    save_error_integration.open("../data_gen/integration_error.txt");
+
+    for(int i = 0; i < FRAME_NUM*20; i++){
 
         double dt = imudata[i+1][0]-imudata[i][0];
-        gyro << imudata[i+1][8],imudata[i+1][9],imudata[i+1][10];
-        acc << imudata[i+1][11],imudata[i+1][12],imudata[i+1][13];
+        gyro << imudata[i][8],imudata[i][9],imudata[i][10];
+        acc << imudata[i][11],imudata[i][12],imudata[i][13];
+
+        Eigen::Quaterniond q_gt(imudata[i][1], imudata[i][2], imudata[i][3], imudata[i][4]);
+        Vector3d p_gt(imudata[i][5],imudata[i][6],imudata[i][7]);
 
         Eigen::Quaterniond dq;
         dq = Exp(gyro*dt);
 
         Pwb += Vw*dt+0.5*g*dt*dt+0.5*dt*dt*(Qwb*acc);
         Vw += Qwb*acc*dt+g*dt;
-        Qwb = Qwb*dq.toRotationMatrix();
-    //     if((dq.toRotationMatrix()-Exp(gyro*dt)).norm()>0.0001){
-    //         count++;
-    //         std::cout<<dq.toRotationMatrix()-Exp(gyro*dt)<<std::endl;
+        Qwb = Qwb*dq;
 
-    //     }
-    //    std::cout<<count<<std::endl;
+        double r_error = (Log(q_gt.toRotationMatrix())-Log(Qwb.toRotationMatrix())).norm();
+        double t_error = (Pwb-p_gt).norm();
 
-        save_points_dir
+        save_points_integration
             <<Qwb.w()<<" "
             <<Qwb.x()<<" "
             <<Qwb.y()<<" "
@@ -220,12 +220,23 @@ int main(int argc, char *argv[]){
             <<Pwb(1)<<" "
             <<Pwb(2)<<" "
             <<std::endl;
+        
+        save_error_integration
+            <<r_error<<" "
+            <<t_error<<" "
+            <<std::endl;
     }
     
     Eigen::Quaterniond Q0(imudata[0][1], imudata[0][2], imudata[0][3], imudata[0][4]);
     Qwb = Q0;
     Pwb << imudata[0][5], imudata[0][6], imudata[0][7];
     Vw << imudata[0][14],imudata[0][15],imudata[0][16];
+
+    std::ofstream save_points_preintegration;
+    save_points_preintegration.open("../data_gen/preintegration_pose.txt");
+
+    std::ofstream save_error_preintegration;
+    save_error_preintegration.open("../data_gen/preintegration_error.txt");
 
 
     for(int i = 1; i < FRAME_NUM + 1; i++){
@@ -238,15 +249,25 @@ int main(int argc, char *argv[]){
             gyro << imudata[i*20+j-19][8],imudata[i*20+j-19][9],imudata[i*20+j-19][10];
             acc << imudata[i*20+j-19][11],imudata[i*20+j-19][12],imudata[i*20+j-19][13];
 
+            Eigen::Quaterniond q_gt(imudata[i*20+j-19][1], imudata[i*20+j-19][2], imudata[i*20+j-19][3], imudata[i*20+j-19][4]);
+            Vector3d p_gt(imudata[i*20+j-19][5],imudata[i*20+j-19][6],imudata[i*20+j-19][7]);
+
+
             bg = v_->estimate().segment(12,3);
             ba = v_->estimate().segment(9,3);
             Vector3d v_p = v_->estimate().segment(6,3);
 
-            Pwb += Vw*dt+0.5*g*dt*dt+Qwb*(acc-ba)*0.5*dt*dt;
-            Vw += Qwb*(acc-ba)*dt+g*dt;
-            Qwb = Qwb*Exp((gyro-bg)*dt);
+            Eigen::Quaterniond dq;
+            dq = Exp((gyro-bg-bg0)*dt);
 
-            save_points_pre
+            Pwb += Vw*dt+0.5*g*dt*dt+Qwb*(acc-ba-ba0)*0.5*dt*dt;
+            Vw += Qwb*(acc-ba-ba0)*dt+g*dt;
+            Qwb = Qwb*dq;
+
+            double r_error = (Log(q_gt.toRotationMatrix())-Log(Qwb.toRotationMatrix())).norm();
+            double t_error = (Pwb-p_gt).norm();
+
+            save_points_preintegration
                 <<Qwb.w()<<" "
                 <<Qwb.x()<<" "
                 <<Qwb.y()<<" "
@@ -264,6 +285,12 @@ int main(int argc, char *argv[]){
                 <<ba(1)<<" "
                 <<ba(2)<<" "
                 <<std::endl;
+            
+            save_error_preintegration
+            <<r_error<<" "
+            <<t_error<<" "
+            <<std::endl;
+
             }        
     }
 

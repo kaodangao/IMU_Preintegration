@@ -1,0 +1,1 @@
+/usr/bin/c++ -std=c++14 -rdynamic CMakeFiles/data_gen.dir/data_gen/gener_alldata.cpp.o CMakeFiles/data_gen.dir/data_gen/src/utilities.cpp.o CMakeFiles/data_gen.dir/data_gen/src/imu.cpp.o -o data_gen 

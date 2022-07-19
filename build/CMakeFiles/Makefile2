@@ -63,6 +63,7 @@ CMAKE_BINARY_DIR = /home/rixap/projects/preintegration/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/data_gen.dir/all
 all: CMakeFiles/preintegration.dir/all
 .PHONY : all
 
@@ -71,8 +72,35 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/data_gen.dir/clean
 clean: CMakeFiles/preintegration.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/data_gen.dir
+
+# All Build rule for target.
+CMakeFiles/data_gen.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/rixap/projects/preintegration/build/CMakeFiles --progress-num=1,2,3,4 "Built target data_gen"
+.PHONY : CMakeFiles/data_gen.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/data_gen.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/rixap/projects/preintegration/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/data_gen.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/rixap/projects/preintegration/build/CMakeFiles 0
+.PHONY : CMakeFiles/data_gen.dir/rule
+
+# Convenience name for target.
+data_gen: CMakeFiles/data_gen.dir/rule
+.PHONY : data_gen
+
+# clean rule for target.
+CMakeFiles/data_gen.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data_gen.dir/build.make CMakeFiles/data_gen.dir/clean
+.PHONY : CMakeFiles/data_gen.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/preintegration.dir
@@ -81,7 +109,7 @@ clean: CMakeFiles/preintegration.dir/clean
 CMakeFiles/preintegration.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/preintegration.dir/build.make CMakeFiles/preintegration.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/preintegration.dir/build.make CMakeFiles/preintegration.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/rixap/projects/preintegration/build/CMakeFiles --progress-num=1,2 "Built target preintegration"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/rixap/projects/preintegration/build/CMakeFiles --progress-num=5,6 "Built target preintegration"
 .PHONY : CMakeFiles/preintegration.dir/all
 
 # Build rule for subdir invocation for target.
